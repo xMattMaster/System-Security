@@ -2,6 +2,8 @@
 
 This repo contains the Homework assignments for the System Security course.
 
+***DISCLAIMER***: **all** keys used in this project are generated for the sole scope of this project. They are **NOT** used anywhere else, and are **NOT** signed by a valid CA.
+
 ### Course information
 
 Professor: Valentina Casola
@@ -14,4 +16,4 @@ Students: Arnese Matteo, Conte Pietro
 
 - [Homework 1 - OpenSSL](hw1/README.md)
 - [Homework 2 - Java Cryptography Architecture](hw2/README.md)
-- Homework 3 - Apache Tomcat configuration with HTTPS (TODO)
+- [Homework 3 - Apache 2/Tomcat configuration with HTTPS](hw3/README.md)
