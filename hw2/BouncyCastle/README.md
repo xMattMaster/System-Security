@@ -1,26 +1,49 @@
 # Homework 2 - Exercise 2: Bouncy Castle
 
-### Assignment
-
-- Use Bouncy Castle to support advanced operations on certificates and signatures (CMS/PKCS#7).
-- Generate X.509 v3 certificates with extensions and manage certificate chains.
-- Perform CMS signing and verification on sample files.
+In this exercise, we use Bouncy Castle to perform advanced cryptographic operations that are not directly available or are simplified through the standard JCA. We generate X.509 v3 certificates with custom extensions, manage certificate chains, and create CMS/PKCS#7 signatures. Lastly, we extract the fields of a X.509 V3 certificate.
 
 ### Solution
 
-This project uses Bouncy Castle as a provider for operations that are complex or not directly exposed by JCA:
+The Java project consists of a single file, ```App.java```, containing various functions that each implement one scenario.
 
-1. Provider setup
-    - Register the Bouncy Castle provider to use its advanced APIs.
+#### ```certificateExample```
 
-2. Certificate generation
-    - Create a CA, generate end-entity X.509 v3 certificates with extensions (basicConstraints, keyUsage).
+The function proceeds to:
 
-3. Keystore and PKCS#12
-    - Export/import keys and certificates in PKCS#12 format.
+1.  Generate two asymmetric key pairs using RSA-4096
 
-4. CMS / PKCS#7
-    - Create and verify CMS signatures (detached/attached) on sample files (artifacts available in the folder, e.g., hamlet.pdf.p7s / hamlet.pdf.sig).
+2.  Create a new self-signed X.509 certificate for the CA
 
-5. Chain and signature verification
-    - Read and validate certificate chains and signatures using the org.bouncycastle.cert and org.bouncycastle.cms classes.
+3.  Write the CA certificate to a PEM file
+
+4.  Create a new X.509 certificate request for Alice
+
+5.  Write the CSR to a PEM file
+
+6.  Create a new X.509 certificate for Alice signed by the CA
+
+7.  Write the CA certificate to a PEM file
+
+8.  Create a P12 file containing CA's private key and certificate
+
+9.  Save the P12 file
+
+10. Create a P12 file containing Alice's private key and certificate chain
+
+11. Save the P12 file
+
+12. Sign a PDF using Alice's private key from the P12 file
+
+13. Verify the PDF signature using Alice's certificate
+
+14. Sign the PDF using CMS
+
+15. Verify the CMS signature
+
+#### ```extractCertInfo```
+
+The function proceeds to:
+
+1.  Load Alice's certificate
+
+2.  Extract and print certificate information

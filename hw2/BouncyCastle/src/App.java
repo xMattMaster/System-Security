@@ -46,7 +46,7 @@ public class App {
         try {
             System.out.println("Certificate example:");
 
-            // Generate two asymmetric key pair using RSA-4096
+            // Generate two asymmetric key pairs using RSA-4096
             KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
             keyPairGen.initialize(4096);
 
