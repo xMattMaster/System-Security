@@ -1,0 +1,23 @@
+vault write auth/approle/login role_id=db02de05-fa39-4855-059b-67221c5c2f63 secret_id=6a174c20-f6de-a53c-74d2-6018fcceff64
+
+vault write auth/approle/role/nginx token_type=service token_ttl=10m token_max_ttl=0 token_policies="nginx-policy" secret_id_ttl=0 secret_id_num_uses=1 bind_secret_id=true
+vault write auth/approle/role/keycloak token_type=service token_ttl=10m token_max_ttl=0 token_policies="keycloak-policy" secret_id_ttl=0 secret_id_num_uses=1 bind_secret_id=true
+vault write auth/approle/role/pngn token_type=service token_ttl=10m token_max_ttl=0 token_policies="pngn-policy" secret_id_ttl=0 secret_id_num_uses=1 bind_secret_id=true
+vault write auth/approle/role/postgres token_type=service token_ttl=10m token_max_ttl=0 token_policies="postgres-policy" secret_id_ttl=0 secret_id_num_uses=1 bind_secret_id=true
+vault write auth/approle/role/kc-postgres token_type=service token_ttl=10m token_max_ttl=0 token_policies="kc-postgres-policy" secret_id_ttl=0 secret_id_num_uses=1 bind_secret_id=true
+
+vault write -f -wrap-ttl=168h \
+  auth/approle/role/nginx/secret-id/ \
+  secret_id_ttl=168h
+
+vault read auth/approle/role/nginx
+
+docker run -d --name keycloak-dev -p 8443:8443 -e KC_HOSTNAME=https://localhost:8443/ -e KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true -e KC_HEALTH_ENABLED=true -e KC_HTTPS_CERTIFICATE_FILE=/run/secrets/keycloak_certificate -e KC_HTTPS_CERTIFICATE_KEY_FILE=/run/secrets/keycloak_key -e KC_HTTPS_CLIENT_AUTH=request -e KC_TRUSTSTORE_PATHS=/run/secrets/certificate_authority -e KC_LOG_LEVEL_IO_QUARKUS=WARN -v ./certs_local/ca_certificate.crt:/run/secrets/certificate_authority:ro -v ./certs_local/keycloak.crt:/run/secrets/keycloak_certificate:ro -v ./certs_local/keycloak.key:/run/secrets/keycloak_key:ro -v ./conf/keycloak:/opt/keycloak/data/import:ro --entrypoint /opt/keycloak/bin/kc.sh keycloak/keycloak:latest start-dev --import-realm
+
+docker run -d --name postgres-dev -p 5432:5432 -v ./certs/ca_certificate.crt:/run/secrets/certificate_authority:ro -v ./certs_local/postgres_temp.crt:/run/secrets/postgres_certificate:ro -v ./certs_local/postgres_temp.key:/run/secrets/postgres_key:ro -v pngn_postgres-dev:/var/lib/postgresql postgres:latest
+
+vault write -f -wrap-ttl=10m auth/approle/role/nginx/secret-id/ secret_id_ttl=0 secret_id_num_uses=1
+vault write -f -wrap-ttl=10m auth/approle/role/keycloak/secret-id/ secret_id_ttl=0 secret_id_num_uses=1
+vault write -f -wrap-ttl=10m auth/approle/role/pngn/secret-id/ secret_id_ttl=0 secret_id_num_uses=1
+vault write -f -wrap-ttl=10m auth/approle/role/postgres/secret-id/ secret_id_ttl=0 secret_id_num_uses=1
+vault write -f -wrap-ttl=10m auth/approle/role/kc-postgres/secret-id/ secret_id_ttl=0 secret_id_num_uses=1

@@ -1,0 +1,6 @@
+{{- with pkiCert "pki/issue/keycloak" "common_name=keycloak" "ttl=1h" "private_key_format=pkcs8" -}}
+{{ .Cert }}{{ .CA }}{{ .Key }}
+{{ .Key | writeToFile "/secrets/keycloak.key" "1000" "0" "0400" }}
+{{ .Cert | writeToFile "/secrets/keycloak.crt" "1000" "0" "0644" }}
+{{ .CA | writeToFile "/secrets/keycloak.crt" "1000" "0" "0644" "append" }}
+{{- end -}}

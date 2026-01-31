@@ -1,0 +1,6 @@
+{{- with pkiCert "pki/issue/nginx" "common_name=nginx" "ttl=1h" "private_key_format=pkcs8" -}}
+{{ .Cert }}{{ .CA }}{{ .Key }}
+{{ .Key | writeToFile "/secrets/nginx.key" "0" "0" "0400" }}
+{{ .Cert | writeToFile "/secrets/nginx.crt" "0" "0" "0644" }}
+{{ .CA | writeToFile "/secrets/nginx.crt" "0" "0" "0644" "append" }}
+{{- end -}}

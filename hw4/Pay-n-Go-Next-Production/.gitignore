@@ -1,0 +1,7 @@
+.env
+vault-cluster*
+conf/keycloak/
+conf/vault/
+*.crt
+*.key
+*.pem

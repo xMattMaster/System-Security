@@ -1,0 +1,326 @@
+name: pay-n-go-next
+services:
+  pngn:
+    image: arneseconte/pngn
+    container_name: pngn
+    env_file:
+      - .env
+    secrets:
+      - certificate_authority
+    volumes:
+      - ./certs/pngn.crt:/run/secrets/pngn_certificate:ro
+      - ./certs/pngn.key:/run/secrets/pngn_key:ro
+      - ./certs/pngn-postgres.crt:/run/secrets/pngn_postgres_certificate:ro
+      - ./certs/pngn-postgres.key:/run/secrets/pngn_postgres_key:ro
+    networks:
+      - frontend
+      - backend
+    depends_on:
+      - postgres18
+      - keycloak
+      - vault-agent-pngn
+    restart: unless-stopped
+
+  vault-agent-pngn:
+    image: hashicorp/vault:latest
+    container_name: pngn-vault-agent
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: https://vault:8200
+      VAULT_CLIENT_TIMEOUT: 60
+      VAULT_CACERT: /run/secrets/certificate_authority
+    secrets:
+      - certificate_authority
+      - pngn_roleid
+      - pngn_secretid
+    volumes:
+      - ./conf/vault-agent-pngn.hcl:/vault/local/config.hcl:ro
+      - ./certs/templates/pngn.ctmpl:/vault/local/pngn.ctmpl:ro
+      - ./certs/templates/pngn-postgres.ctmpl:/vault/local/pngn-postgres.ctmpl:ro
+      - ./certs/pngn.crt:/secrets/pngn.crt
+      - ./certs/pngn.key:/secrets/pngn.key
+      - ./certs/pngn-postgres.crt:/secrets/pngn-postgres.crt
+      - ./certs/pngn-postgres.key:/secrets/pngn-postgres.key
+    networks:
+      - vault
+    depends_on:
+      - vault
+    restart: unless-stopped
+    entrypoint: [ "vault" ]
+    command: [ "agent", "-config=/vault/local/config.hcl" ]
+
+  postgres18:
+    image: postgres:latest
+    container_name: postgres
+    secrets:
+      - certificate_authority
+    volumes:
+      - ./certs/postgres.crt:/run/secrets/postgres_certificate:ro
+      - ./certs/postgres.key:/run/secrets/postgres_key:ro
+      - pngn-postgres:/var/lib/postgresql
+    networks:
+      - backend
+    depends_on:
+      - vault-agent-postgres
+    restart: unless-stopped
+
+  vault-agent-postgres:
+    image: hashicorp/vault:latest
+    container_name: postgres-vault-agent
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: https://vault:8200
+      VAULT_CLIENT_TIMEOUT: 60
+      VAULT_CACERT: /run/secrets/certificate_authority
+    secrets:
+      - certificate_authority
+      - postgres_roleid
+      - postgres_secretid
+    volumes:
+      - ./conf/vault-agent-postgres.hcl:/vault/local/config.hcl:ro
+      - ./certs/templates/postgres.ctmpl:/vault/local/postgres.ctmpl:ro
+      - ./certs/postgres.crt:/secrets/postgres.crt
+      - ./certs/postgres.key:/secrets/postgres.key
+    networks:
+      - vault
+    depends_on:
+      - vault
+    restart: unless-stopped
+    entrypoint: [ "vault" ]
+    command: [ "agent", "-config=/vault/local/config.hcl" ]
+
+  keycloak:
+    image: keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KC_HOSTNAME: https://arneseconte.it/auth/keycloak
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: true
+      KC_HEALTH_ENABLED: true
+      KC_HTTPS_CERTIFICATE_FILE: /run/secrets/keycloak_certificate
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /run/secrets/keycloak_key
+      KC_HTTPS_CERTIFICATES_RELOAD_PERIOD: 5m
+      KC_HTTPS_CLIENT_AUTH: required
+      KC_TRUSTSTORE_PATHS: /run/secrets/certificate_authority
+      KC_PROXY_HEADERS: xforwarded
+      KC_LOG_LEVEL_IO_QUARKUS: WARN
+#      KC_DB: postgres
+#      KC_DB_URL: jdbc:postgresql://kc-postgres18:5432/postgres?sslmode=verify-full&sslrootcert=/run/secrets/certificate_authority&sslcert=/run/secrets/keycloak_certificate&sslkey=/run/secrets/keycloak_key
+#      KC_DB_USERNAME: keycloak
+    secrets:
+      - certificate_authority
+    volumes:
+      - ./certs/keycloak.crt:/run/secrets/keycloak_certificate:ro
+      - ./certs/keycloak.key:/run/secrets/keycloak_key:ro
+      - ./conf/keycloak:/opt/keycloak/data/import:ro
+    networks:
+      - frontend
+      - keycloak
+    depends_on:
+      - vault-agent-keycloak
+    restart: unless-stopped
+    entrypoint: /opt/keycloak/bin/kc.sh
+    command: start --import-realm --verbose
+
+  vault-agent-keycloak:
+    image: hashicorp/vault:latest
+    container_name: keycloak-vault-agent
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: https://vault:8200
+      VAULT_CLIENT_TIMEOUT: 60
+      VAULT_CACERT: /run/secrets/certificate_authority
+    secrets:
+      - certificate_authority
+      - keycloak_roleid
+      - keycloak_secretid
+    volumes:
+      - ./conf/vault-agent-keycloak.hcl:/vault/local/config.hcl:ro
+      - ./certs/templates/keycloak.ctmpl:/vault/local/keycloak.ctmpl:ro
+      - ./certs/keycloak.crt:/secrets/keycloak.crt
+      - ./certs/keycloak.key:/secrets/keycloak.key
+    networks:
+      - vault
+    depends_on:
+      - vault
+    restart: unless-stopped
+    entrypoint: [ "vault" ]
+    command: [ "agent", "-config=/vault/local/config.hcl" ]
+
+  kc-postgres18:
+    image: postgres:latest
+    container_name: kc-postgres
+    secrets:
+      - certificate_authority
+    volumes:
+      - ./certs/kc-postgres.crt:/run/secrets/kc_postgres_certificate:ro
+      - ./certs/kc-postgres.key:/run/secrets/kc_postgres_key:ro
+      - kc-postgres:/var/lib/postgresql
+    networks:
+      - keycloak
+    depends_on:
+      - vault-agent-kc-postgres
+    restart: unless-stopped
+
+  vault-agent-kc-postgres:
+    image: hashicorp/vault:latest
+    container_name: kc-postgres-vault-agent
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: https://vault:8200
+      VAULT_CLIENT_TIMEOUT: 60
+      VAULT_CACERT: /run/secrets/certificate_authority
+    secrets:
+      - certificate_authority
+      - kc_postgres_roleid
+      - kc_postgres_secretid
+    volumes:
+      - ./conf/vault-agent-kc-postgres.hcl:/vault/local/config.hcl:ro
+      - ./certs/templates/kc-postgres.ctmpl:/vault/local/kc-postgres.ctmpl:ro
+      - ./certs/kc-postgres.crt:/secrets/kc-postgres.crt
+      - ./certs/kc-postgres.key:/secrets/kc-postgres.key
+    networks:
+      - vault
+    depends_on:
+      - vault
+    restart: unless-stopped
+    entrypoint: [ "vault" ]
+    command: [ "agent", "-config=/vault/local/config.hcl" ]
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    secrets:
+      - ssl_certificate
+      - ssl_certificate_key
+      - certificate_authority
+    volumes:
+      - ./certs/nginx.crt:/run/secrets/nginx_certificate:ro
+      - ./certs/nginx.key:/run/secrets/nginx_key:ro
+      - ./conf/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+       - frontend
+    depends_on:
+      - pngn
+      - keycloak
+      - vault-agent-nginx
+    restart: unless-stopped
+
+  vault-agent-nginx:
+    image: hashicorp/vault:latest
+    container_name: nginx-vault-agent
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: https://vault:8200
+      VAULT_CLIENT_TIMEOUT: 60
+      VAULT_CACERT: /run/secrets/certificate_authority
+    secrets:
+      - certificate_authority
+      - nginx_roleid
+      - nginx_secretid
+    volumes:
+      - ./conf/vault-agent-nginx.hcl:/vault/local/config.hcl:ro
+      - ./certs/templates/nginx.ctmpl:/vault/local/nginx.ctmpl:ro
+      - ./certs/nginx.crt:/secrets/nginx.crt
+      - ./certs/nginx.key:/secrets/nginx.key
+    networks:
+      - vault
+    depends_on:
+      - vault
+    restart: unless-stopped
+    entrypoint: ["vault"]
+    command: ["agent", "-config=/vault/local/config.hcl"]
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_ADDR: "https://localhost:8200"
+      VAULT_API_ADDR: "https://localhost:8200"
+      VAULT_ADDRESS: "https://localhost:8200"
+      VAULT_CACERT: /run/secrets/certificate_authority
+    secrets:
+      - certificate_authority
+      - vault_certificate
+      - vault_key
+    volumes:
+      - ./conf/config.hcl:/vault/config/config.hcl:ro
+      - vault-file:/vault/file
+      - vault-data:/vault/data
+      - vault-logs:/vault/logs
+    networks:
+      - vault
+    restart: unless-stopped
+    entrypoint: vault server -config /vault/config/config.hcl
+
+secrets:
+  ssl_certificate:
+    file: ./certs/fullchain.pem
+  ssl_certificate_key:
+    file: ./certs/privkey.pem
+  certificate_authority:
+    file: ./certs/ca_certificate.crt
+  nginx_roleid:
+    file: ./conf/vault/nginx_roleid.txt
+  nginx_secretid:
+    file: ./conf/vault/nginx_secretid.txt
+  postgres_roleid:
+    file: ./conf/vault/postgres_roleid.txt
+  postgres_secretid:
+    file: ./conf/vault/postgres_secretid.txt
+  keycloak_roleid:
+    file: ./conf/vault/keycloak_roleid.txt
+  keycloak_secretid:
+    file: ./conf/vault/keycloak_secretid.txt
+  kc_postgres_roleid:
+    file: ./conf/vault/kc_postgres_roleid.txt
+  kc_postgres_secretid:
+    file: ./conf/vault/kc_postgres_secretid.txt
+  pngn_roleid:
+    file: ./conf/vault/pngn_roleid.txt
+  pngn_secretid:
+    file: ./conf/vault/pngn_secretid.txt
+  vault_certificate:
+    file: ./certs/vault.crt
+  vault_key:
+    file: ./certs/vault.key
+
+volumes:
+  pngn-postgres:
+    external: true
+    name: pngn_postgres
+  kc-postgres:
+    external: true
+    name: kc_postgres
+  vault-file:
+    external: true
+    name: vault_file
+  vault-data:
+    external: true
+    name: vault_data
+  vault-logs:
+    external: true
+    name: vault_logs
+
+networks:
+  frontend:
+    driver: bridge
+    internal: false
+  backend:
+    driver: bridge
+    internal: true
+  keycloak:
+    driver: bridge
+    internal: true
+  vault:
+    driver: bridge
+    internal: true

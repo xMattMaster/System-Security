@@ -1,0 +1,6 @@
+{{- with pkiCert "pki/issue/kc-postgres" "common_name=kc-postgres18" "ttl=1h" "private_key_format=pkcs8" -}}
+{{ .Cert }}{{ .CA }}{{ .Key }}
+{{ .Key | writeToFile "/secrets/kc-postgres.key" "999" "999" "0400" }}
+{{ .Cert | writeToFile "/secrets/kc-postgres.crt" "999" "999" "0644" }}
+{{ .CA | writeToFile "/secrets/kc-postgres.crt" "999" "999" "0644" "append" }}
+{{- end -}}

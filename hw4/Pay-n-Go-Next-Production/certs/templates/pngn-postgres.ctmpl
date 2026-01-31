@@ -1,0 +1,6 @@
+{{- with pkiCert "pki/issue/pngn-postgres" "common_name=nextjs_app" "dns=pngn" "ttl=1h" -}}
+{{ .Cert }}{{ .CA }}{{ .Key }}
+{{ .Key | writeToFile "/secrets/pngn-postgres.key" "1001" "65534" "0400" }}
+{{ .Cert | writeToFile "/secrets/pngn-postgres.crt" "1001" "65534" "0644" }}
+{{ .CA | writeToFile "/secrets/pngn-postgres.crt" "1001" "65534" "0644" "append" }}
+{{- end -}}
