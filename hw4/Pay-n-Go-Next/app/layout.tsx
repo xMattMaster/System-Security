@@ -3,6 +3,7 @@ import {Inter} from "next/font/google";
 import {Providers} from "@/components/providers";
 import {Navbar} from "@/components/navbar";
 import {Footer} from "@/components/footer";
+import {CookieBanner} from "@/components/cookie-banner";
 import { headers } from "next/headers";
 import "./globals.css";
 
@@ -26,6 +27,7 @@ export default async function RootLayout({children}: {
                 <Navbar/>
                 <main className="flex-grow">{children}</main>
                 <Footer/>
+                <CookieBanner/>
             </div>
         </Providers>
         </body>

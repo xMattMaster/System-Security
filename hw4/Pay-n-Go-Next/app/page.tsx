@@ -18,7 +18,7 @@ export default function Home() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5 }}
                         >
-                            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent">
+                            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-gradient-to-r from-primary to-emerald-600 bg-clip-text text-transparent pb-6">
                                 Viaggia Smart, <br /> Paga Green.
                             </h1>
                             <p className="text-lg md:text-xl text-muted-foreground mb-8">

@@ -11,16 +11,21 @@ import KeycloakProvider from "next-auth/providers/keycloak";
 import * as https from "node:https";
 import {custom} from "openid-client";
 
-const keycloakAgent = new https.Agent({
-    cert: fs.readFileSync(process.env.KEYCLOAK_SSL_CLIENTCERT || ""),
-    key: fs.readFileSync(process.env.KEYCLOAK_SSL_CLIENTKEY || ""),
-    ca: fs.readFileSync(process.env.KEYCLOAK_SSL_ROOTCERT || ""),
-    rejectUnauthorized: process.env.NODE_ENV === 'production',
-});
+let keycloakAgent: https.Agent;
 
-custom.setHttpOptionsDefaults({
-    agent: keycloakAgent
-});
+export function refreshKeycloakAgent() {
+    keycloakAgent = new https.Agent({
+        cert: fs.readFileSync(process.env.KEYCLOAK_SSL_CLIENTCERT!),
+        key: fs.readFileSync(process.env.KEYCLOAK_SSL_CLIENTKEY!),
+        ca: fs.readFileSync(process.env.KEYCLOAK_SSL_ROOTCERT!),
+        rejectUnauthorized: process.env.NODE_ENV === 'production'
+    });
+    custom.setHttpOptionsDefaults({
+        agent: keycloakAgent
+    });
+}
+
+refreshKeycloakAgent();
 
 const baseUrl = (process.env.NEXTAUTH_URL || "").replace(/\/+$/, "")
 

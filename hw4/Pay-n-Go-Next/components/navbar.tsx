@@ -37,8 +37,8 @@ export function Navbar() {
                         <Link href="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
                             Dashboard
                         </Link> ): null }
-                    <Link href="/terms" className="text-sm font-medium hover:text-primary transition-colors">
-                        Terms
+                    <Link href="/contacts" className="text-sm font-medium hover:text-primary transition-colors">
+                        About us
                     </Link>
                 </div>
 
@@ -96,8 +96,8 @@ export function Navbar() {
                     <Link href="/dashboard" className="block text-sm font-medium hover:text-primary" onClick={() => setIsMenuOpen(false)}>
                         Dashboard
                     </Link>
-                    <Link href="/terms" className="block text-sm font-medium hover:text-primary" onClick={() => setIsMenuOpen(false)}>
-                        Terms
+                    <Link href="/contacts" className="block text-sm font-medium hover:text-primary" onClick={() => setIsMenuOpen(false)}>
+                        About us
                     </Link>
                     <div className="pt-4 border-t">
                         {session ? (

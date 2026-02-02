@@ -20,8 +20,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-primary">
-                  Terms of Service
+                <Link href="/contacts" className="hover:text-primary">
+                  Contact Us
                 </Link>
               </li>
             </ul>
@@ -30,12 +30,17 @@ export function Footer() {
             <h3 className="font-bold text-lg mb-4">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
-                <Link href="/privacy" className="hover:text-primary">
+                <Link href="/terms-of-service" className="hover:text-primary">
+                  Termini di Servizio
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy-policy" className="hover:text-primary">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/cookie" className="hover:text-primary">
+                <Link href="/cookie-policy" className="hover:text-primary">
                   Cookie Policy
                 </Link>
               </li>
@@ -43,7 +48,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Pay n&apos; Go Next. All rights reserved.
+          &copy; {new Date().getFullYear()} Pay n&apos; Go Next. Tutti i diritti riservati.
         </div>
       </div>
     </footer>
